@@ -1,13 +1,34 @@
 import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { MovieCarousel } from "@/components/MovieCarousel";
-import { getMovieById, movies } from "@/data/movies";
+import { useMovie, useRecommendations } from "@/hooks/useMovies";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Star, Clock, Calendar, DollarSign } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Star, Clock, Calendar } from "lucide-react";
 
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
-  const movie = getMovieById(id || "");
+  const { data: movie, isLoading } = useMovie(id || "");
+  const { data: recommendations = [] } = useRecommendations(movie?.title || "");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 px-4 md:px-12">
+          <Skeleton className="h-[60vh] w-full mb-8" />
+          <div className="flex gap-8">
+            <Skeleton className="w-64 h-96" />
+            <div className="flex-1 space-y-4">
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!movie) {
     return (
@@ -19,8 +40,6 @@ export default function MovieDetail() {
       </div>
     );
   }
-
-  const similarMovies = movies.filter((m) => m.id !== movie.id && m.genres.some((g) => movie.genres.some((mg) => mg.id === g.id))).slice(0, 10);
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,9 +66,9 @@ export default function MovieDetail() {
             {movie.tagline && <p className="text-primary mb-4 italic">"{movie.tagline}"</p>}
             
             <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1 text-yellow-500"><Star className="h-4 w-4 fill-current" />{movie.rating}</span>
+              <span className="flex items-center gap-1 text-yellow-500"><Star className="h-4 w-4 fill-current" />{movie.rating.toFixed(1)}</span>
               <span className="flex items-center gap-1"><Calendar className="h-4 w-4" />{movie.year}</span>
-              <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{movie.duration} min</span>
+              {movie.duration > 0 && <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{movie.duration} min</span>}
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
@@ -68,7 +87,7 @@ export default function MovieDetail() {
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Acteurs principaux</h3>
               <div className="flex flex-wrap gap-2">
-                {movie.actors.map((a) => <span key={a.id} className="px-3 py-1 bg-card rounded text-sm">{a.name}</span>)}
+                {movie.actors.map((a) => <span key={a.id} className="px-3 py-1 bg-card rounded text-sm">{a.name}{a.role && ` (${a.role})`}</span>)}
               </div>
             </div>
 
@@ -83,7 +102,7 @@ export default function MovieDetail() {
           </div>
         </div>
 
-        {similarMovies.length > 0 && <MovieCarousel title="Films similaires" movies={similarMovies} />}
+        {recommendations.length > 0 && <MovieCarousel title="Films similaires" movies={recommendations} />}
       </div>
     </div>
   );
