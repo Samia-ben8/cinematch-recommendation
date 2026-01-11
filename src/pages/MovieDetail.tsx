@@ -62,32 +62,45 @@ export default function MovieDetail() {
           <img src={movie.poster} alt={movie.title} className="w-48 md:w-64 rounded-lg shadow-2xl hidden md:block" />
           
           <div className="flex-1">
-            <h1 className="text-3xl md:text-5xl font-bold mb-2">{movie.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold mb-1">{movie.title}</h1>
+            {movie.originalTitle && movie.originalTitle !== movie.title && (
+              <p className="text-lg text-muted-foreground mb-2">({movie.originalTitle})</p>
+            )}
             {movie.tagline && <p className="text-primary mb-4 italic">"{movie.tagline}"</p>}
             
             <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1 text-yellow-500"><Star className="h-4 w-4 fill-current" />{movie.rating.toFixed(1)}</span>
-              <span className="flex items-center gap-1"><Calendar className="h-4 w-4" />{movie.year}</span>
+              <span className="flex items-center gap-1"><Calendar className="h-4 w-4" />{movie.releaseDate}</span>
               {movie.duration > 0 && <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{movie.duration} min</span>}
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              {movie.genres.map((g) => <span key={g.id} className="px-3 py-1 bg-secondary rounded-full text-xs">{g.name}</span>)}
+              {movie.genres.length > 0 ? (
+                movie.genres.map((g) => <span key={g.id} className="px-3 py-1 bg-secondary rounded-full text-xs">{g.name}</span>)
+              ) : (
+                <span className="text-muted-foreground text-sm">Aucun genre disponible</span>
+              )}
             </div>
 
             <p className="text-muted-foreground mb-6 max-w-3xl">{movie.synopsis}</p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-sm">
-              <div><span className="text-muted-foreground">Réalisateur</span><p className="font-medium">{movie.director.name}</p></div>
-              {movie.budget && <div><span className="text-muted-foreground">Budget</span><p className="font-medium">${(movie.budget / 1000000).toFixed(0)}M</p></div>}
-              {movie.revenue && <div><span className="text-muted-foreground">Revenus</span><p className="font-medium">${(movie.revenue / 1000000).toFixed(0)}M</p></div>}
-              <div><span className="text-muted-foreground">Langue</span><p className="font-medium uppercase">{movie.language}</p></div>
+              <div><span className="text-muted-foreground block">Réalisateur</span><p className="font-medium">{movie.director.name}</p></div>
+              <div><span className="text-muted-foreground block">Date de sortie</span><p className="font-medium">{movie.releaseDate}</p></div>
+              <div><span className="text-muted-foreground block">Langue</span><p className="font-medium">{movie.language}</p></div>
+              <div><span className="text-muted-foreground block">Durée</span><p className="font-medium">{movie.duration > 0 ? `${movie.duration} min` : 'N/A'}</p></div>
+              {movie.budget ? <div><span className="text-muted-foreground block">Budget</span><p className="font-medium">${(movie.budget / 1000000).toFixed(1)}M</p></div> : null}
+              {movie.revenue ? <div><span className="text-muted-foreground block">Revenus</span><p className="font-medium">${(movie.revenue / 1000000).toFixed(1)}M</p></div> : null}
             </div>
 
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Acteurs principaux</h3>
               <div className="flex flex-wrap gap-2">
-                {movie.actors.map((a) => <span key={a.id} className="px-3 py-1 bg-card rounded text-sm">{a.name}{a.role && ` (${a.role})`}</span>)}
+                {movie.actors.length > 0 ? (
+                  movie.actors.map((a) => <span key={a.id} className="px-3 py-1 bg-card rounded text-sm">{a.name}{a.role && ` (${a.role})`}</span>)
+                ) : (
+                  <span className="text-muted-foreground text-sm">Aucun acteur disponible</span>
+                )}
               </div>
             </div>
 
