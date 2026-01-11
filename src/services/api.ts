@@ -5,49 +5,54 @@ const API_URL = "https://neo4j-movies-api-production.up.railway.app";
 interface Neo4jMovie {
   id: string;
   title: string;
+  originalTitle?: string;
   tagline?: string;
-  released?: number;
-  runtime?: number;
+  year?: string; // "1995-11-22" format
+  duration?: number;
   rating?: number;
-  votes?: number;
-  plot?: string;
+  synopsis?: string;
   poster?: string;
   backdrop?: string;
   budget?: number;
   revenue?: number;
+  releaseDate?: string;
   language?: string;
-  genres?: string[];
-  directors?: Array<{ id: string; name: string; photo?: string }>;
+  genres?: Array<{ id: string; name: string }>;
+  director?: { id: string; name: string };
   actors?: Array<{ id: string; name: string; role?: string; photo?: string }>;
+  trailerUrl?: string | null;
 }
 
 function mapNeo4jToMovie(neo4jMovie: Neo4jMovie): Movie {
+  // Extract year from date string like "1995-11-22"
+  const yearFromDate = neo4jMovie.year ? parseInt(neo4jMovie.year.split("-")[0]) : new Date().getFullYear();
+  
   return {
     id: neo4jMovie.id || String(Math.random()),
     title: neo4jMovie.title || "Sans titre",
-    originalTitle: neo4jMovie.title,
+    originalTitle: neo4jMovie.originalTitle || neo4jMovie.title,
     poster: neo4jMovie.poster || "https://via.placeholder.com/500x750?text=No+Poster",
     backdrop: neo4jMovie.backdrop || neo4jMovie.poster || "https://via.placeholder.com/1920x1080?text=No+Backdrop",
-    year: neo4jMovie.released || new Date().getFullYear(),
-    duration: neo4jMovie.runtime || 0,
+    year: yearFromDate,
+    duration: neo4jMovie.duration || 0,
     rating: neo4jMovie.rating || 0,
-    synopsis: neo4jMovie.plot || "Aucun synopsis disponible.",
-    genres: (neo4jMovie.genres || []).map((g, i) => ({
-      id: g.toLowerCase().replace(/\s/g, "-"),
-      name: g,
-      slug: g.toLowerCase().replace(/\s/g, "-"),
+    synopsis: neo4jMovie.synopsis || "Aucun synopsis disponible.",
+    genres: (neo4jMovie.genres || []).map((g) => ({
+      id: g.id || g.name.toLowerCase().replace(/\s/g, "-"),
+      name: g.name,
+      slug: g.name.toLowerCase().replace(/\s/g, "-"),
     })),
-    director: neo4jMovie.directors?.[0] || { id: "unknown", name: "Inconnu" },
+    director: neo4jMovie.director || { id: "unknown", name: "Inconnu" },
     actors: (neo4jMovie.actors || []).map((a) => ({
       id: a.id || String(Math.random()),
       name: a.name,
       role: a.role,
       photo: a.photo,
     })),
-    trailerUrl: undefined,
+    trailerUrl: neo4jMovie.trailerUrl || undefined,
     budget: neo4jMovie.budget,
     revenue: neo4jMovie.revenue,
-    releaseDate: neo4jMovie.released ? `${neo4jMovie.released}-01-01` : "",
+    releaseDate: neo4jMovie.releaseDate || neo4jMovie.year || "",
     language: neo4jMovie.language || "en",
     tagline: neo4jMovie.tagline,
   };
