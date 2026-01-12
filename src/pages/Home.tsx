@@ -1,18 +1,21 @@
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { MovieCarousel } from "@/components/MovieCarousel";
-import { useMovies, useGenres } from "@/hooks/useMovies";
+import { useTrendingMovies, useMoviesPage, useGenres, useMoviesByGenrePage } from "@/hooks/useMovies";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
-  const { data: movies = [], isLoading: moviesLoading } = useMovies();
+  const { data: trendingData, isLoading: trendingLoading } = useTrendingMovies();
+  const { data: catalogData, isLoading: catalogLoading } = useMoviesPage(1, 20);
   const { data: genres = [] } = useGenres();
 
-  const featuredMovie = movies[0];
-  const trending = movies.slice(0, 10);
-  const recommended = movies.slice(10, 20);
+  const trending = trendingData?.movies || [];
+  const recommended = catalogData?.movies || [];
+  const featuredMovie = trending[0] || recommended[0];
 
-  if (moviesLoading) {
+  const isLoading = trendingLoading || catalogLoading;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -45,18 +48,26 @@ export default function Home() {
       <Navbar />
       <HeroSection movie={featuredMovie} />
       <div className="-mt-32 relative z-10 pb-12">
-        <MovieCarousel title="Tendances actuelles" movies={trending} />
+        {trending.length > 0 && (
+          <MovieCarousel title="Tendances actuelles" movies={trending} />
+        )}
         {recommended.length > 0 && (
           <MovieCarousel title="Recommandés pour vous" movies={recommended} />
         )}
-        {genres.slice(0, 4).map((genre) => {
-          const genreMovies = movies.filter((m) =>
-            m.genres.some((g) => g.name.toLowerCase() === genre.toLowerCase())
-          );
-          if (genreMovies.length === 0) return null;
-          return <MovieCarousel key={genre} title={genre} movies={genreMovies.slice(0, 10)} />;
-        })}
+        {genres.slice(0, 4).map((genre) => (
+          <GenreCarousel key={genre.slug} genre={genre} />
+        ))}
       </div>
     </div>
   );
+}
+
+// Separate component for genre carousels to handle individual loading
+function GenreCarousel({ genre }: { genre: { name: string; slug: string } }) {
+  const { data } = useMoviesByGenrePage(genre.slug, 1, 10);
+  const movies = data?.movies || [];
+
+  if (movies.length === 0) return null;
+
+  return <MovieCarousel title={genre.name} movies={movies} />;
 }

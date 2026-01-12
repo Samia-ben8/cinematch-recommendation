@@ -1,13 +1,13 @@
-import { Movie, Genre, Person } from "@/types/movie";
+import { Movie, Genre, Person, PaginatedResponse, ApiGenre } from "@/types/movie";
 
-const API_URL = "https://neo4j-movies-api-production.up.railway.app";
+const API_URL = "https://neo4j-movies-api-production-bbb4.up.railway.app";
 
 interface Neo4jMovie {
   id: string;
   title: string;
   originalTitle?: string;
   tagline?: string;
-  year?: string; // "1995-11-22" format
+  year?: string;
   duration?: number;
   rating?: number;
   synopsis?: string;
@@ -23,8 +23,14 @@ interface Neo4jMovie {
   trailerUrl?: string | null;
 }
 
+interface ApiPaginatedResponse {
+  page: number | null;
+  limit: number;
+  total: number;
+  movies: Neo4jMovie[];
+}
+
 function mapNeo4jToMovie(neo4jMovie: Neo4jMovie): Movie {
-  // Extract year from date string like "1995-11-22"
   const yearFromDate = neo4jMovie.year ? parseInt(neo4jMovie.year.split("-")[0]) : new Date().getFullYear();
   
   return {
@@ -58,15 +64,39 @@ function mapNeo4jToMovie(neo4jMovie: Neo4jMovie): Movie {
   };
 }
 
-export async function fetchMovies(): Promise<Movie[]> {
+// Paginated movies fetch
+export async function fetchMovies(page: number = 1, limit: number = 50): Promise<PaginatedResponse<Movie>> {
   try {
-    const response = await fetch(`${API_URL}/api/movies`);
+    const response = await fetch(`${API_URL}/api/movies?page=${page}&limit=${limit}`);
     if (!response.ok) throw new Error("Failed to fetch movies");
-    const data: Neo4jMovie[] = await response.json();
-    return data.map(mapNeo4jToMovie);
+    const data: ApiPaginatedResponse = await response.json();
+    return {
+      page: data.page,
+      limit: data.limit,
+      total: data.total,
+      movies: data.movies.map(mapNeo4jToMovie),
+    };
   } catch (error) {
     console.error("Error fetching movies:", error);
-    return [];
+    return { page: null, limit, total: 0, movies: [] };
+  }
+}
+
+// Trending movies (no pagination, but same structure)
+export async function fetchTrendingMovies(): Promise<PaginatedResponse<Movie>> {
+  try {
+    const response = await fetch(`${API_URL}/api/movies/trending`);
+    if (!response.ok) throw new Error("Failed to fetch trending movies");
+    const data: ApiPaginatedResponse = await response.json();
+    return {
+      page: data.page,
+      limit: data.limit,
+      total: data.total,
+      movies: data.movies.map(mapNeo4jToMovie),
+    };
+  } catch (error) {
+    console.error("Error fetching trending movies:", error);
+    return { page: null, limit: 10, total: 0, movies: [] };
   }
 }
 
@@ -82,47 +112,66 @@ export async function fetchMovieById(id: string): Promise<Movie | null> {
   }
 }
 
-export async function searchMovies(query: string): Promise<Movie[]> {
+// Paginated search
+export async function searchMovies(query: string, page: number = 1, limit: number = 50): Promise<PaginatedResponse<Movie>> {
   try {
-    const response = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_URL}/api/movies/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
     if (!response.ok) throw new Error("Failed to search movies");
-    const data: Neo4jMovie[] = await response.json();
-    return data.map(mapNeo4jToMovie);
+    const data: ApiPaginatedResponse = await response.json();
+    return {
+      page: data.page,
+      limit: data.limit,
+      total: data.total,
+      movies: data.movies.map(mapNeo4jToMovie),
+    };
   } catch (error) {
     console.error("Error searching movies:", error);
-    return [];
+    return { page: null, limit, total: 0, movies: [] };
   }
 }
 
-export async function fetchRecommendations(title: string): Promise<Movie[]> {
+// Recommendations (no pagination)
+export async function fetchRecommendations(movieId: string): Promise<PaginatedResponse<Movie>> {
   try {
-    const response = await fetch(`${API_URL}/api/recommendations/${encodeURIComponent(title)}`);
+    const response = await fetch(`${API_URL}/api/recommendations/${encodeURIComponent(movieId)}`);
     if (!response.ok) throw new Error("Failed to fetch recommendations");
-    const data: Neo4jMovie[] = await response.json();
-    return data.map(mapNeo4jToMovie);
+    const data: ApiPaginatedResponse = await response.json();
+    return {
+      page: data.page,
+      limit: data.limit,
+      total: data.total,
+      movies: data.movies.map(mapNeo4jToMovie),
+    };
   } catch (error) {
     console.error("Error fetching recommendations:", error);
-    return [];
+    return { page: null, limit: 10, total: 0, movies: [] };
   }
 }
 
-export async function fetchMoviesByGenre(genre: string): Promise<Movie[]> {
+// Paginated movies by genre (uses slug)
+export async function fetchMoviesByGenre(genreSlug: string, page: number = 1, limit: number = 50): Promise<PaginatedResponse<Movie>> {
   try {
-    const response = await fetch(`${API_URL}/api/movies/genre/${encodeURIComponent(genre)}`);
+    const response = await fetch(`${API_URL}/api/movies/genre/${encodeURIComponent(genreSlug)}?page=${page}&limit=${limit}`);
     if (!response.ok) throw new Error("Failed to fetch movies by genre");
-    const data: Neo4jMovie[] = await response.json();
-    return data.map(mapNeo4jToMovie);
+    const data: ApiPaginatedResponse = await response.json();
+    return {
+      page: data.page,
+      limit: data.limit,
+      total: data.total,
+      movies: data.movies.map(mapNeo4jToMovie),
+    };
   } catch (error) {
     console.error("Error fetching movies by genre:", error);
-    return [];
+    return { page: null, limit, total: 0, movies: [] };
   }
 }
 
-export async function fetchGenres(): Promise<string[]> {
+// Fetch genres (returns array with slug)
+export async function fetchGenres(): Promise<ApiGenre[]> {
   try {
     const response = await fetch(`${API_URL}/api/genres`);
     if (!response.ok) throw new Error("Failed to fetch genres");
-    const data: string[] = await response.json();
+    const data: ApiGenre[] = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching genres:", error);
