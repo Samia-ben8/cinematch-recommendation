@@ -1,6 +1,6 @@
 import { Movie, Genre, Person, PaginatedResponse, ApiGenre } from "@/types/movie";
 
-const API_URL = "https://neo4j-movies-api-production-bbb4.up.railway.app";
+const API_URL = "https://feisty-wisdom-production.up.railway.app";
 
 interface Neo4jMovie {
   id: string;
