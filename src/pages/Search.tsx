@@ -16,7 +16,8 @@ export default function Search() {
   const [selectedGenre, setSelectedGenre] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: genres = [] } = useGenres();
+  const { data: genresData } = useGenres();
+  const genres = Array.isArray(genresData) ? genresData : [];
 
   // Determine which data source to use
   const isSearching = query.length > 0;

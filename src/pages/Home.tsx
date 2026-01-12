@@ -7,11 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Home() {
   const { data: trendingData, isLoading: trendingLoading } = useTrendingMovies();
   const { data: catalogData, isLoading: catalogLoading } = useMoviesPage(1, 20);
-  const { data: genres = [] } = useGenres();
+  const { data: genresData } = useGenres();
 
   const trending = trendingData?.movies || [];
   const recommended = catalogData?.movies || [];
   const featuredMovie = trending[0] || recommended[0];
+  const genres = Array.isArray(genresData) ? genresData : [];
 
   const isLoading = trendingLoading || catalogLoading;
 
