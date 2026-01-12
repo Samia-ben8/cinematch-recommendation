@@ -51,3 +51,16 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+export interface PaginatedResponse<T> {
+  page: number | null;
+  limit: number;
+  total: number;
+  movies: T[];
+}
+
+export interface ApiGenre {
+  id: string;
+  name: string;
+  slug: string;
+}

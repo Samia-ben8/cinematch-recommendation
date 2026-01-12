@@ -9,7 +9,8 @@ import { ArrowLeft, Star, Clock, Calendar } from "lucide-react";
 export default function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: movie, isLoading } = useMovie(id || "");
-  const { data: recommendations = [] } = useRecommendations(movie?.title || "");
+  const { data: recommendationsData } = useRecommendations(movie?.id || "");
+  const recommendations = recommendationsData?.movies || [];
 
   if (isLoading) {
     return (
